@@ -62,6 +62,17 @@ nav{padding:18px 12px;flex:1}
 .btn-new{background:var(--accent);color:#fff;border:none;padding:9px 18px;border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
 .btn-new:hover{background:var(--accent2);transform:translateY(-1px)}
 .content{padding:26px 28px;flex:1}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--muted2);font-size:15px;padding:4px 8px;border-radius:6px;transition:all .15s}
+.del-btn:hover{background:#fff0f2;color:var(--accent2)}
+.confirm-overlay{position:fixed;inset:0;background:rgba(45,26,34,.35);z-index:100;display:flex;align-items:center;justify-content:center}
+.confirm-box{background:#fff;border-radius:16px;padding:28px 32px;max-width:360px;width:90%;box-shadow:0 8px 40px rgba(45,26,34,.15)}
+.confirm-title{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px}
+.confirm-sub{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.5}
+.confirm-btns{display:flex;gap:10px}
+.confirm-cancel{flex:1;padding:10px;border-radius:9px;border:1.5px solid var(--border);background:#fff;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;color:var(--muted);font-weight:500}
+.confirm-cancel:hover{border-color:var(--border2)}
+.confirm-delete{flex:1;padding:10px;border-radius:9px;border:none;background:linear-gradient(135deg,#e0697f,#c0456a);color:#fff;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;font-weight:500}
+.confirm-delete:hover{opacity:.88}
 
 /* Steps */
 .steps-row{display:flex;gap:10px;margin-bottom:24px}
@@ -194,6 +205,10 @@ nav{padding:18px 12px;flex:1}
         </div>
         <button class="btn-new" onclick="showPage('new')">+ New article</button>
       </div>
+      <div id="greeting-bar" style="padding:22px 28px 0;display:none">
+        <div style="font-family:'Playfair Display',serif;font-size:28px" id="greeting-text">Hello!</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:5px">What articles are we writing today? ✦</div>
+      </div>
       <div class="content">
 
         <!-- NEW ARTICLE -->
@@ -264,7 +279,7 @@ nav{padding:18px 12px;flex:1}
           </div>
           <div class="table-wrap">
             <table class="jt">
-              <thead><tr><th>Topic</th><th>Keyword</th><th>Company</th><th>Words</th><th>Status</th><th>Doc</th></tr></thead>
+              <thead><tr><th>Topic</th><th>Keyword</th><th>Company</th><th>Words</th><th>Status</th><th>Doc</th><th></th></tr></thead>
               <tbody id="art-tbody"><tr><td colspan="6"><div class="empty">✦<br>No articles yet — create your first one!</div></td></tr></tbody>
             </table>
           </div>
@@ -274,11 +289,11 @@ nav{padding:18px 12px;flex:1}
     </div>
   </div>
 </div>
-<div class="toast" id="toast"></div>
+<div class="confirm-overlay" id="confirm-overlay" style="display:none" onclick="cancelDelete(event)"><div class="confirm-box"><div class="confirm-title">Remove article?</div><div class="confirm-sub" id="confirm-sub">This will remove it from your list. The Google Doc will not be deleted.</div><div class="confirm-btns"><button class="confirm-cancel" onclick="cancelDelete()">Cancel</button><button class="confirm-delete" onclick="confirmDelete()">Remove</button></div></div></div><div class="toast" id="toast"></div>
 
 <script>
 // ── CONFIG — update N8N_BASE to your ngrok URL ────────────────────────────────
-const N8N_BASE = 'https://cathern-decomposed-predelinquently.ngrok-free.dev';
+const N8N_BASE   = 'https://cathern-decomposed-predelinquently.ngrok-free.dev';
 const URL_SUG    = N8N_BASE + '/webhook/suggest-topics';
 const URL_WRITE  = N8N_BASE + '/webhook/write-article';
 
@@ -311,6 +326,7 @@ function boot(u) {
   const name = u.charAt(0).toUpperCase() + u.slice(1);
   document.getElementById('un').textContent = name;
   document.getElementById('ua').textContent = name[0];
+  document.getElementById('greeting-text').textContent = 'Hello, ' + name + '!';
   loadArt(); showPage('articles');
 }
 window.addEventListener('DOMContentLoaded', () => {
@@ -328,6 +344,7 @@ function showPage(p) {
   document.getElementById('nav-art').classList.toggle('active', p==='articles');
   document.getElementById('pt').textContent = p==='new' ? 'New article' : 'My articles';
   document.getElementById('ps').textContent = p==='new' ? 'Generate SEO content in minutes' : 'All your generated content';
+  document.getElementById('greeting-bar').style.display = p==='articles' ? 'block' : 'none';
   if (p==='new') resetForm();
 }
 
@@ -436,15 +453,39 @@ function filterArt(f, tabEl) {
   const arts = getArts();
   const list = f==='done' ? arts.filter(a=>a.status==='done') : f==='progress' ? arts.filter(a=>a.status!=='done') : arts;
   const tbody = document.getElementById('art-tbody');
-  if (!list.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty">✦<br>No articles ${f==='all'?'yet — create your first one!':'in this category.'}</div></td></tr>`; return; }
-  tbody.innerHTML = list.map(a => `<tr>
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="7"><div class="empty">✦<br>No articles ${f==='all'?'yet — create your first one!':'in this category.'}</div></td></tr>`; return; }
+  tbody.innerHTML = list.map((a,i) => `<tr>
     <td style="max-width:200px;line-height:1.4;font-weight:500">${a.topic}</td>
     <td><span class="kw-pill">${a.keyword}</span></td>
     <td style="color:var(--muted)">${a.company}</td>
     <td style="color:var(--muted)">${Number(a.wordCount).toLocaleString()}</td>
     <td>${a.status==='done'?'<span class="sb s-done"><span class="dot"></span>Done</span>':'<span class="sb s-draft"><span class="dot"></span>Drafting</span>'}</td>
     <td>${a.docLink?`<a href="${a.docLink}" target="_blank" class="vl">View ↗</a>`:'<span style="color:var(--muted2)">—</span>'}</td>
+    <td><button class="del-btn" onclick="askDelete(${arts.indexOf(a)},'${a.topic.replace(/'/g,"\\'").substring(0,40)}')">✕</button></td>
   </tr>`).join('');
+}
+
+// ── DELETE ARTICLE ─────────────────────────────────────────────────────────────
+let deleteIdx = null;
+function askDelete(idx, title) {
+  deleteIdx = idx;
+  document.getElementById('confirm-sub').textContent = `"${title}..." will be removed from your list. The Google Doc won't be deleted.`;
+  document.getElementById('confirm-overlay').style.display = 'flex';
+}
+function cancelDelete(e) {
+  if (e && e.target !== document.getElementById('confirm-overlay')) return;
+  document.getElementById('confirm-overlay').style.display = 'none';
+  deleteIdx = null;
+}
+function confirmDelete() {
+  if (deleteIdx === null) return;
+  const arts = getArts();
+  arts.splice(deleteIdx, 1);
+  localStorage.setItem('ms-arts', JSON.stringify(arts));
+  document.getElementById('confirm-overlay').style.display = 'none';
+  deleteIdx = null;
+  loadArt();
+  toast('Article removed');
 }
 
 // ── RESET FORM ────────────────────────────────────────────────────────────────
