@@ -15,7 +15,11 @@
   --green:#2d8c5e;--green-bg:#e8f7f0;--yellow:#b86e00;--yellow-bg:#fff4e0;
   --blue:#3a6fd8;--blue-bg:#eef2fd;
 }
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+body.dark{--bg:#18111a;--surface:#211620;--surface2:#2c1f2b;--border:#3d2a3a;--border2:#4e3549;--accent:#e06880;--accent-light:rgba(224,104,128,.15);--accent2:#c0456a;--soft:#7a3555;--text:#f5e8ef;--muted:#c4a0ae;--muted2:#7a5a6a;--green:#4ade80;--green-bg:rgba(74,222,128,.1);--yellow:#fbbf24;--yellow-bg:rgba(251,191,36,.1);--blue:#7ba7f5;--blue-bg:rgba(123,167,245,.1)}
+body.dark .login-card{background:var(--surface)}
+body.dark input,body.dark select{background:var(--surface2);color:var(--text)}
+body.dark .confirm-box{background:var(--surface)}
 
 /* LOGIN */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#fdf0f4,#fce8f0,#f8e0ea)}
@@ -203,16 +207,16 @@ nav{padding:18px 12px;flex:1}
           <div class="page-title" id="pt">My articles</div>
           <div class="page-sub" id="ps">All your generated content</div>
         </div>
-        <button class="btn-new" onclick="showPage('new')">+ New article</button>
-      </div>
-      <div id="greeting-bar" style="padding:22px 28px 0;display:none">
-        <div style="font-family:'Playfair Display',serif;font-size:28px" id="greeting-text">Hello!</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:5px">What articles are we writing today? ✦</div>
+        <div style="display:flex;align-items:center;gap:10px"><button id="dark-toggle" onclick="toggleDark()" style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s" title="Toggle dark mode">🌙</button><button class="btn-new" onclick="showPage('new')">+ New article</button></div>
       </div>
       <div class="content">
 
         <!-- NEW ARTICLE -->
         <div id="page-new" style="display:none">
+          <div id="greeting-bar" style="margin-bottom:24px">
+            <div style="font-family:'Playfair Display',serif;font-size:28px" id="greeting-text">Hello!</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:5px">What are we writing today? ✦</div>
+          </div>
           <div class="steps-row">
             <div class="step active" id="sp1"><div class="step-pip"></div><div class="step-num">Step 1</div><div class="step-label">Enter details</div></div>
             <div class="step" id="sp2"><div class="step-pip"></div><div class="step-num">Step 2</div><div class="step-label">Pick a topic</div></div>
@@ -279,7 +283,7 @@ nav{padding:18px 12px;flex:1}
           </div>
           <div class="table-wrap">
             <table class="jt">
-              <thead><tr><th>Topic</th><th>Keyword</th><th>Company</th><th>Words</th><th>Status</th><th>Doc</th><th></th></tr></thead>
+              <thead><tr><th>Topic</th><th>Keyword</th><th>Company</th><th>Words</th><th>Status</th><th>Submitted</th><th>Notes</th><th>Doc</th><th></th></tr></thead>
               <tbody id="art-tbody"><tr><td colspan="6"><div class="empty">✦<br>No articles yet — create your first one!</div></td></tr></tbody>
             </table>
           </div>
@@ -344,7 +348,7 @@ function showPage(p) {
   document.getElementById('nav-art').classList.toggle('active', p==='articles');
   document.getElementById('pt').textContent = p==='new' ? 'New article' : 'My articles';
   document.getElementById('ps').textContent = p==='new' ? 'Generate SEO content in minutes' : 'All your generated content';
-  document.getElementById('greeting-bar').style.display = p==='articles' ? 'block' : 'none';
+  document.getElementById('greeting-bar').style.display = p==='new' ? 'block' : 'none';
   if (p==='new') resetForm();
 }
 
@@ -424,7 +428,7 @@ async function writeArticle() {
     document.getElementById('done-sub').textContent = `"${picked}" written and saved to Google Drive.`;
     document.getElementById('done-link').href = d.docLink;
     btn.style.display = 'none';
-    saveArt({topic:picked,keyword,company,wordCount:wc,status:'done',docLink:d.docLink,date:new Date().toISOString()});
+    saveArt({topic:picked,keyword,company,wordCount:wc,status:'done',docLink:d.docLink,date:new Date().toISOString(),note:'',submitted:false});
     toast('Article saved!');
     document.getElementById('done-card').scrollIntoView({behavior:'smooth',block:'nearest'});
   } catch(e) {
@@ -465,6 +469,17 @@ function filterArt(f, tabEl) {
   </tr>`).join('');
 }
 
+// ── UPDATE NOTE / SUBMITTED ───────────────────────────────────────────────────
+function updateNote(idx, val) {
+  const arts = getArts(); arts[idx].note = val;
+  localStorage.setItem('ms-arts', JSON.stringify(arts));
+}
+function toggleSubmitted(idx, val) {
+  const arts = getArts(); arts[idx].submitted = val;
+  localStorage.setItem('ms-arts', JSON.stringify(arts));
+  loadArt();
+}
+
 // ── DELETE ARTICLE ─────────────────────────────────────────────────────────────
 let deleteIdx = null;
 function askDelete(idx, title) {
@@ -502,6 +517,22 @@ function resetForm() {
   picked = null;
   for(let i=1;i<=4;i++) setStep(i, i===1?'active':'');
 }
+
+// ── DARK MODE ────────────────────────────────────────────────────────────────
+function toggleDark() {
+  const dark = document.body.classList.toggle('dark');
+  localStorage.setItem('ms-dark', dark ? '1' : '');
+  document.getElementById('dark-toggle').textContent = dark ? '☀️' : '🌙';
+}
+(function(){
+  if (localStorage.getItem('ms-dark')) {
+    document.body.classList.add('dark');
+    window.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = '☀️';
+    });
+  }
+})();
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function toast(msg) {
