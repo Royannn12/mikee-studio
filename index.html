@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mikee's Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#fdf6f8;--surface:#ffffff;--surface2:#fff0f4;--border:#f0d9e0;--border2:#e8c8d3;
+  --accent:#d4567a;--accent-light:#f9e0e8;--accent2:#c0456a;--soft:#f7c5d3;
+  --text:#2d1a22;--muted:#9e7080;--muted2:#c4a0ae;
+  --green:#2d8c5e;--green-bg:#e8f7f0;--yellow:#b86e00;--yellow-bg:#fff4e0;
+  --blue:#3a6fd8;--blue-bg:#eef2fd;
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#fdf0f4,#fce8f0,#f8e0ea)}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(212,86,122,.12)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center}
+.login-logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#e8788a,#c0456a);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.login-logo-text{font-family:'Playfair Display',serif;font-size:22px}
+.login-title{font-family:'Playfair Display',serif;font-size:26px;text-align:center;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px}
+.lg{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.lg label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.lg input{background:var(--bg);border:1.5px solid var(--border);color:var(--text);padding:12px 14px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border .15s}
+.lg input:focus{border-color:var(--accent);background:#fff}
+.lg input::placeholder{color:var(--muted2)}
+.login-btn{width:100%;background:linear-gradient(135deg,#e0697f,#c0456a);color:#fff;border:none;padding:13px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all .2s}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,69,106,.3)}
+.login-error{background:#fff0f2;border:1px solid #f5c0cc;color:#a03050;padding:10px 14px;border-radius:9px;font-size:13px;margin-bottom:14px;display:none}
+
+/* APP */
+#app-screen{display:none}
+.app{display:flex;min-height:100vh}
+.sidebar{width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;height:100vh}
+.logo{padding:22px 20px 20px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--border)}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#e8788a,#c0456a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-text{font-family:'Playfair Display',serif;font-size:17px;line-height:1.1}
+.logo-sub{font-size:10px;color:var(--muted2);letter-spacing:.06em;text-transform:uppercase}
+nav{padding:18px 12px;flex:1}
+.nav-sec{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;padding:0 8px;margin:14px 0 6px}
+.nav-sec:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;margin-bottom:1px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.user-pill{margin:10px 12px 14px;padding:11px 13px;background:var(--surface2);border-radius:12px;display:flex;align-items:center;gap:10px;border:1px solid var(--border)}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f0a0b8,#d4567a);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:500}
+.user-role{font-size:11px;color:var(--muted2)}
+.logout-btn{font-size:11px;color:var(--muted2);cursor:pointer;text-decoration:underline}
+.logout-btn:hover{color:var(--accent)}
+
+.main{flex:1;margin-left:230px;display:flex;flex-direction:column}
+.topbar{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:10}
+.page-title{font-family:'Playfair Display',serif;font-size:22px}
+.page-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.btn-new{background:var(--accent);color:#fff;border:none;padding:9px 18px;border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-new:hover{background:var(--accent2);transform:translateY(-1px)}
+.content{padding:26px 28px;flex:1}
+
+/* Steps */
+.steps-row{display:flex;gap:10px;margin-bottom:24px}
+.step{flex:1;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;transition:all .2s}
+.step.active{border-color:var(--accent)}
+.step.done{border-color:#b8dccb;background:var(--green-bg)}
+.step-pip{width:6px;height:6px;border-radius:50%;background:var(--border2);margin-bottom:8px}
+.step.active .step-pip{background:var(--accent)}
+.step.done .step-pip{background:var(--green)}
+.step-num{font-size:10px;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.step-label{font-size:12px;font-weight:500;color:var(--muted)}
+.step.active .step-label{color:var(--accent)}
+.step.done .step-label{color:var(--green)}
+
+/* Cards & forms */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px}
+.card-title{font-family:'Playfair Display',serif;font-size:17px;margin-bottom:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.fg input,.fg select{background:var(--bg);border:1.5px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;transition:border .15s;width:100%}
+.fg input:focus,.fg select:focus{border-color:var(--accent);background:#fff}
+.fg input::placeholder{color:var(--muted2)}
+
+.btn-gen{width:100%;background:linear-gradient(135deg,#e0697f,#c0456a);color:#fff;border:none;padding:13px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-gen:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(192,69,106,.25)}
+.btn-gen:disabled{opacity:.6;cursor:not-allowed}
+.btn-write{width:100%;background:#fff;color:var(--accent);border:2px solid var(--accent);padding:12px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;margin-top:14px;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-write:hover:not(:disabled){background:var(--accent);color:#fff}
+.btn-write:disabled{opacity:.6;cursor:not-allowed}
+
+/* Topics */
+.topics-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;font-weight:500}
+.topic-card{display:flex;align-items:flex-start;gap:13px;padding:13px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:11px;cursor:pointer;margin-bottom:8px;transition:all .18s}
+.topic-card:hover{border-color:var(--soft);background:var(--surface2);transform:translateX(3px)}
+.topic-card.selected{border-color:var(--accent);background:#fff8fa}
+.topic-num{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);flex-shrink:0;margin-top:1px;font-weight:500;transition:all .18s}
+.topic-card.selected .topic-num{background:var(--accent);border-color:var(--accent);color:#fff}
+.topic-text{font-size:13px;line-height:1.55}
+
+/* Done card */
+.done-card{background:#fff;border:1.5px solid #b8dccb;border-radius:14px;padding:22px;margin-top:4px}
+.done-inner{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.done-icon{width:44px;height:44px;background:var(--green-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.done-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--green);margin-bottom:3px}
+.done-sub{font-size:12px;color:var(--muted)}
+.doc-link{display:inline-flex;align-items:center;gap:7px;background:var(--green-bg);color:var(--green);padding:10px 18px;border-radius:9px;font-size:13px;font-weight:500;text-decoration:none;border:1px solid #b8dccb;transition:all .15s}
+.doc-link:hover{background:#d5f0e5}
+.err-box{background:#fff0f2;border:1px solid #f5c0cc;color:#a03050;padding:12px 16px;border-radius:10px;font-size:13px;margin-top:12px;display:none}
+
+/* Articles page */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:18px 20px}
+.stat-val{font-family:'Playfair Display',serif;font-size:28px;line-height:1}
+.stat-label{font-size:12px;color:var(--muted);margin-top:5px}
+.stat-pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:7px;font-weight:500}
+.tabs{display:flex;gap:2px;margin-bottom:18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content}
+.tab{padding:7px 18px;border-radius:8px;font-size:13px;cursor:pointer;color:var(--muted);transition:all .15s}
+.tab.active{background:var(--accent);color:#fff;font-weight:500}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.jt{width:100%;border-collapse:collapse}
+.jt th{text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:13px 18px;border-bottom:1px solid var(--border);font-weight:500;background:var(--surface2)}
+.jt td{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.jt tr:last-child td{border-bottom:none}
+.jt tbody tr:hover{background:var(--surface2)}
+.kw-pill{display:inline-block;background:var(--accent-light);color:var(--accent);padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.sb{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.s-done{background:var(--green-bg);color:var(--green)}
+.s-draft{background:var(--yellow-bg);color:var(--yellow)}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.vl{display:inline-flex;align-items:center;color:var(--accent);font-size:12px;padding:5px 11px;border-radius:7px;background:var(--accent-light);text-decoration:none;font-weight:500}
+.vl:hover{background:var(--soft)}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.spin-pink{border-color:rgba(212,86,122,.3);border-top-color:var(--accent)}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">✦</div>
+      <div class="login-logo-text">Mikee's Studio</div>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to your content workspace</div>
+    <div class="login-error" id="login-error">Incorrect username or password.</div>
+    <div class="lg"><label>Username</label><input type="text" id="lu" placeholder="Enter your username"></div>
+    <div class="lg"><label>Password</label><input type="password" id="lp" placeholder="Enter your password"></div>
+    <button class="login-btn" onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="app">
+    <div class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">✦</div>
+        <div><div class="logo-text">Mikee's Studio</div><div class="logo-sub">Content workspace</div></div>
+      </div>
+      <nav>
+        <div class="nav-sec">Create</div>
+        <div class="nav-item" id="nav-new" onclick="showPage('new')"><span style="font-size:15px">✏️</span> New article</div>
+        <div class="nav-sec">Manage</div>
+        <div class="nav-item active" id="nav-art" onclick="showPage('articles')"><span style="font-size:15px">📄</span> My articles</div>
+      </nav>
+      <div class="user-pill">
+        <div class="avatar" id="ua">M</div>
+        <div>
+          <div class="user-name" id="un">Mikee</div>
+          <div class="user-role">VA Content Writer</div>
+          <div class="logout-btn" onclick="doLogout()">Sign out</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="topbar">
+        <div>
+          <div class="page-title" id="pt">My articles</div>
+          <div class="page-sub" id="ps">All your generated content</div>
+        </div>
+        <button class="btn-new" onclick="showPage('new')">+ New article</button>
+      </div>
+      <div class="content">
+
+        <!-- NEW ARTICLE -->
+        <div id="page-new" style="display:none">
+          <div class="steps-row">
+            <div class="step active" id="sp1"><div class="step-pip"></div><div class="step-num">Step 1</div><div class="step-label">Enter details</div></div>
+            <div class="step" id="sp2"><div class="step-pip"></div><div class="step-num">Step 2</div><div class="step-label">Pick a topic</div></div>
+            <div class="step" id="sp3"><div class="step-pip"></div><div class="step-num">Step 3</div><div class="step-label">Generate article</div></div>
+            <div class="step" id="sp4"><div class="step-pip"></div><div class="step-num">Step 4</div><div class="step-label">Get Google Doc</div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Article details</div>
+            <div class="form-grid">
+              <div class="fg"><label>Company name</label><input type="text" id="fc" placeholder="e.g. Acme Corp"></div>
+              <div class="fg"><label>Primary keyword</label><input type="text" id="fk" placeholder="e.g. cloud security"></div>
+              <div class="fg"><label>Target word count</label><input type="number" id="fw" placeholder="e.g. 600" min="100" max="5000" value="1500"></div>
+            </div>
+            <button class="btn-gen" id="btn-sug" onclick="suggestTopics()">✦ Suggest topics with AI</button>
+            <div class="err-box" id="err-sug">Could not reach n8n. Make sure it is running and ngrok is active.</div>
+          </div>
+
+          <div id="topics-sec" style="display:none">
+            <div class="card">
+              <div class="card-title">Choose a topic</div>
+              <div class="topics-label">AI-suggested topics — tap to select one</div>
+              <div id="tlist"></div>
+              <button class="btn-write" id="btn-write" style="display:none" onclick="writeArticle()">✦ Write full SEO article</button>
+              <div class="err-box" id="err-write">Article generation failed. Please try again.</div>
+            </div>
+          </div>
+
+          <div class="done-card" id="done-card" style="display:none">
+            <div class="done-inner">
+              <div class="done-icon">🌸</div>
+              <div>
+                <div class="done-title">Article ready!</div>
+                <div class="done-sub" id="done-sub">Written and saved to your Google Drive folder.</div>
+              </div>
+            </div>
+            <a href="#" target="_blank" class="doc-link" id="done-link">📄 Open in Google Docs ↗</a>
+          </div>
+        </div>
+
+        <!-- ARTICLES -->
+        <div id="page-art">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-val" id="st-total">0</div>
+              <div class="stat-label">Total articles</div>
+              <span class="stat-pill" style="background:var(--accent-light);color:var(--accent)">All time</span>
+            </div>
+            <div class="stat-card">
+              <div class="stat-val" id="st-done">0</div>
+              <div class="stat-label">Completed</div>
+              <span class="stat-pill" style="background:var(--green-bg);color:var(--green)">With doc link</span>
+            </div>
+            <div class="stat-card">
+              <div class="stat-val" id="st-co">0</div>
+              <div class="stat-label">Companies</div>
+              <span class="stat-pill" style="background:var(--blue-bg);color:var(--blue)">Unique</span>
+            </div>
+          </div>
+          <div class="tabs">
+            <div class="tab active" onclick="filterArt('all',this)">All</div>
+            <div class="tab" onclick="filterArt('done',this)">Done</div>
+            <div class="tab" onclick="filterArt('progress',this)">In progress</div>
+          </div>
+          <div class="table-wrap">
+            <table class="jt">
+              <thead><tr><th>Topic</th><th>Keyword</th><th>Company</th><th>Words</th><th>Status</th><th>Doc</th></tr></thead>
+              <tbody id="art-tbody"><tr><td colspan="6"><div class="empty">✦<br>No articles yet — create your first one!</div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG — update N8N_BASE to your ngrok URL ────────────────────────────────
+const N8N_BASE   = 'YOUR_NGROK_URL'; // e.g. https://abc123.ngrok-free.app
+const URL_SUG    = N8N_BASE + '/webhook/suggest-topics';
+const URL_WRITE  = N8N_BASE + '/webhook/write-article';
+
+// ── USERS — change password before deploying ──────────────────────────────────
+const USERS = { 'mikee': 'studio2025' };
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function doLogin() {
+  const u = document.getElementById('lu').value.trim().toLowerCase();
+  const p = document.getElementById('lp').value;
+  if (USERS[u] === p) {
+    document.getElementById('login-error').style.display = 'none';
+    sessionStorage.setItem('ms-u', u);
+    boot(u);
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('lp').value = '';
+  }
+}
+function doLogout() {
+  sessionStorage.removeItem('ms-u');
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('lu').value = '';
+  document.getElementById('lp').value = '';
+}
+function boot(u) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  const name = u.charAt(0).toUpperCase() + u.slice(1);
+  document.getElementById('un').textContent = name;
+  document.getElementById('ua').textContent = name[0];
+  loadArt(); showPage('articles');
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const u = sessionStorage.getItem('ms-u');
+  if (u) boot(u);
+  document.getElementById('lp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  document.getElementById('lu').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('lp').focus(); });
+});
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(p) {
+  document.getElementById('page-new').style.display = p==='new' ? 'block':'none';
+  document.getElementById('page-art').style.display = p==='articles' ? 'block':'none';
+  document.getElementById('nav-new').classList.toggle('active', p==='new');
+  document.getElementById('nav-art').classList.toggle('active', p==='articles');
+  document.getElementById('pt').textContent = p==='new' ? 'New article' : 'My articles';
+  document.getElementById('ps').textContent = p==='new' ? 'Generate SEO content in minutes' : 'All your generated content';
+  if (p==='new') resetForm();
+}
+
+// ── STEP HELPERS ──────────────────────────────────────────────────────────────
+const stepLabels = {1:'Enter details',2:'Pick a topic',3:'Generate article',4:'Get Google Doc'};
+const stepDone   = {1:'Details entered',2:'Topic selected',3:'Article written',4:'Doc created'};
+function setStep(n, state) {
+  const el = document.getElementById('sp'+n);
+  el.className = 'step' + (state ? ' '+state : '');
+  el.innerHTML = `<div class="step-pip"></div><div class="step-num">Step ${n}</div><div class="step-label">${state==='done'?'✓ '+stepDone[n]:stepLabels[n]}</div>`;
+}
+
+// ── SUGGEST TOPICS ────────────────────────────────────────────────────────────
+let picked = null;
+async function suggestTopics() {
+  const company = document.getElementById('fc').value.trim();
+  const keyword = document.getElementById('fk').value.trim();
+  const wc      = document.getElementById('fw').value;
+  const btn     = document.getElementById('btn-sug');
+  const err     = document.getElementById('err-sug');
+  if (!company || !keyword) { toast('Fill in company name and keyword first'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Generating...';
+  err.style.display = 'none';
+  try {
+    const r = await fetch(URL_SUG, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc}) });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    const topics = Array.isArray(d.topics) ? d.topics : [];
+    if (!topics.length) throw new Error('empty');
+    renderTopics(topics);
+    setStep(1,'done'); setStep(2,'active');
+    document.getElementById('topics-sec').style.display = 'block';
+    document.getElementById('topics-sec').scrollIntoView({behavior:'smooth',block:'nearest'});
+  } catch(e) {
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '✦ Suggest topics with AI';
+  }
+}
+function renderTopics(topics) {
+  picked = null;
+  document.getElementById('btn-write').style.display = 'none';
+  document.getElementById('tlist').innerHTML = topics.map((t,i) =>
+    `<div class="topic-card" id="tc${i}" onclick="pickTopic(${i},this.querySelector('.topic-text').textContent)">
+      <div class="topic-num">${i+1}</div>
+      <div class="topic-text">${t}</div>
+    </div>`).join('');
+}
+function pickTopic(i, text) {
+  picked = text;
+  document.querySelectorAll('.topic-card').forEach(el => el.classList.remove('selected'));
+  document.getElementById('tc'+i).classList.add('selected');
+  document.getElementById('btn-write').style.display = 'flex';
+  setStep(2,'done'); setStep(3,'active');
+}
+
+// ── WRITE ARTICLE ─────────────────────────────────────────────────────────────
+async function writeArticle() {
+  if (!picked) return;
+  const company = document.getElementById('fc').value.trim();
+  const keyword = document.getElementById('fk').value.trim();
+  const wc      = document.getElementById('fw').value;
+  const btn     = document.getElementById('btn-write');
+  const err     = document.getElementById('err-write');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin spin-pink"></span> Writing article — this may take a minute...';
+  err.style.display = 'none';
+  try {
+    const r = await fetch(URL_WRITE, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,finalTopic:picked}) });
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    if (!d.docLink) throw new Error('no link');
+    setStep(3,'done'); setStep(4,'done');
+    document.getElementById('done-card').style.display = 'block';
+    document.getElementById('done-sub').textContent = `"${picked}" written and saved to Google Drive.`;
+    document.getElementById('done-link').href = d.docLink;
+    btn.style.display = 'none';
+    saveArt({topic:picked,keyword,company,wordCount:wc,status:'done',docLink:d.docLink,date:new Date().toISOString()});
+    toast('Article saved!');
+    document.getElementById('done-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+  } catch(e) {
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.innerHTML = '✦ Write full SEO article';
+  }
+}
+
+// ── ARTICLES LIST ─────────────────────────────────────────────────────────────
+let curFilter = 'all';
+function getArts() { try { return JSON.parse(localStorage.getItem('ms-arts')||'[]'); } catch { return []; } }
+function saveArt(a) { const arts=getArts(); arts.unshift(a); localStorage.setItem('ms-arts',JSON.stringify(arts)); loadArt(); }
+function loadArt() {
+  const arts = getArts();
+  const done = arts.filter(a=>a.docLink);
+  const cos  = [...new Set(arts.map(a=>a.company))];
+  document.getElementById('st-total').textContent = arts.length;
+  document.getElementById('st-done').textContent  = done.length;
+  document.getElementById('st-co').textContent    = cos.length;
+  filterArt(curFilter);
+}
+function filterArt(f, tabEl) {
+  curFilter = f;
+  if (tabEl) { document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); tabEl.classList.add('active'); }
+  const arts = getArts();
+  const list = f==='done' ? arts.filter(a=>a.status==='done') : f==='progress' ? arts.filter(a=>a.status!=='done') : arts;
+  const tbody = document.getElementById('art-tbody');
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty">✦<br>No articles ${f==='all'?'yet — create your first one!':'in this category.'}</div></td></tr>`; return; }
+  tbody.innerHTML = list.map(a => `<tr>
+    <td style="max-width:200px;line-height:1.4;font-weight:500">${a.topic}</td>
+    <td><span class="kw-pill">${a.keyword}</span></td>
+    <td style="color:var(--muted)">${a.company}</td>
+    <td style="color:var(--muted)">${Number(a.wordCount).toLocaleString()}</td>
+    <td>${a.status==='done'?'<span class="sb s-done"><span class="dot"></span>Done</span>':'<span class="sb s-draft"><span class="dot"></span>Drafting</span>'}</td>
+    <td>${a.docLink?`<a href="${a.docLink}" target="_blank" class="vl">View ↗</a>`:'<span style="color:var(--muted2)">—</span>'}</td>
+  </tr>`).join('');
+}
+
+// ── RESET FORM ────────────────────────────────────────────────────────────────
+function resetForm() {
+  ['fc','fk'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fw').value='';
+  document.getElementById('topics-sec').style.display='none';
+  document.getElementById('done-card').style.display='none';
+  document.getElementById('err-sug').style.display='none';
+  document.getElementById('err-write').style.display='none';
+  document.getElementById('btn-write').style.display='none';
+  document.getElementById('btn-sug').disabled=false;
+  document.getElementById('btn-sug').innerHTML='✦ Suggest topics with AI';
+  picked = null;
+  for(let i=1;i<=4;i++) setStep(i, i===1?'active':'');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
