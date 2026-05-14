@@ -18,8 +18,8 @@
 body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
 body.dark{--bg:#18111a;--surface:#221520;--surface2:#2e1e2a;--border:#3d2a3a;--border2:#4e3549;--accent:#f07090;--accent-light:rgba(240,112,144,.18);--accent2:#d4567a;--soft:#7a3555;--text:#f5e8ef;--muted:#c4a0ae;--muted2:#8a6a7a;--green:#4ade80;--green-bg:rgba(74,222,128,.12);--yellow:#fbbf24;--yellow-bg:rgba(251,191,36,.12);--blue:#7ba7f5;--blue-bg:rgba(123,167,245,.12)}
 body.dark .login-card{background:var(--surface)}
-body.dark input,body.dark select{background:var(--surface2);color:var(--text);border-color:var(--border2)}
-body.dark input::placeholder{color:var(--muted2)}
+body.dark input,body.dark select,body.dark input[type=text],body.dark input[type=number],body.dark input[type=password]{background:var(--surface2) !important;color:var(--text) !important;border-color:var(--border2) !important}
+body.dark input::placeholder{color:var(--muted2) !important}body.dark input:focus,body.dark select:focus{background:var(--surface2) !important;border-color:var(--accent) !important}
 body.dark .confirm-box{background:var(--surface)}
 body.dark .sidebar{background:var(--surface)}
 body.dark .topbar{background:var(--surface)}
