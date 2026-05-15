@@ -257,7 +257,24 @@ nav{padding:18px 12px;flex:1}
             <div class="form-grid">
               <div class="fg"><label>Company name</label><input type="text" id="fc" placeholder="e.g. Acme Corp"></div>
               <div class="fg"><label>Primary keyword</label><input type="text" id="fk" placeholder="e.g. cloud security"></div>
-              <div class="fg"><label>Target word count</label><input type="number" id="fw" placeholder="e.g. 600" min="100" max="5000" value="1500"></div>
+              <div class="fg"><label>Company website</label><input type="text" id="fweb" placeholder="e.g. https://acmecorp.com"></div>
+              <div class="fg"><label>Company location</label><input type="text" id="floc" placeholder="e.g. Naples, FL"></div>
+              <div class="fg"><label>Target word count</label><input type="number" id="fw" placeholder="e.g. 600" min="100" max="5000"></div>
+            </div>
+            <button class="btn-gen" id="btn-sug" onclick="suggestTopics()">✦ Suggest topics with AI</button>
+            <div class="err-box" id="err-sug">Could not reach n8n. Make sure it is running and ngrok is active.</div>
+          </div>
+
+          <div class="card" id="manual-topic-card" style="margin-bottom:0">
+            <div class="card-title" style="margin-bottom:12px">Topic</div>
+            <div class="fg" style="margin-bottom:14px">
+              <label>Type your own topic (optional)</label>
+              <input type="text" id="fmanual" placeholder="e.g. How to Find the Best House Cleaner in Naples">
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <div style="flex:1;height:1px;background:var(--border)"></div>
+              <span style="font-size:11px;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em">or get AI suggestions</span>
+              <div style="flex:1;height:1px;background:var(--border)"></div>
             </div>
             <button class="btn-gen" id="btn-sug" onclick="suggestTopics()">✦ Suggest topics with AI</button>
             <div class="err-box" id="err-sug">Could not reach n8n. Make sure it is running and ngrok is active.</div>
@@ -268,9 +285,12 @@ nav{padding:18px 12px;flex:1}
               <div class="card-title">Choose a topic</div>
               <div class="topics-label">AI-suggested topics — tap to select one</div>
               <div id="tlist"></div>
-              <button class="btn-write" id="btn-write" style="display:none" onclick="writeArticle()">✦ Write full SEO article</button>
-              <div class="err-box" id="err-write">Article generation failed. Please try again.</div>
             </div>
+          </div>
+
+          <div class="card" id="write-card" style="display:none">
+            <button class="btn-write" id="btn-write" onclick="writeArticle()">✦ Write full SEO article</button>
+            <div class="err-box" id="err-write">Article generation failed. Please try again.</div>
           </div>
 
           <div class="done-card" id="done-card" style="display:none">
@@ -366,6 +386,11 @@ window.addEventListener('DOMContentLoaded', () => {
   if (u) boot(u);
   document.getElementById('lp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
   document.getElementById('lu').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('lp').focus(); });
+  document.getElementById('fmanual').addEventListener('input', function() {
+    const wc = document.getElementById('write-card');
+    if (this.value.trim()) { wc.style.display='block'; setStep(2,'done'); setStep(3,'active'); }
+    else if (!picked) { wc.style.display='none'; }
+  });
 });
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
@@ -392,17 +417,19 @@ function setStep(n, state) {
 // ── SUGGEST TOPICS ────────────────────────────────────────────────────────────
 let picked = null;
 async function suggestTopics() {
-  const company = document.getElementById('fc').value.trim();
-  const keyword = document.getElementById('fk').value.trim();
-  const wc      = document.getElementById('fw').value;
-  const btn     = document.getElementById('btn-sug');
-  const err     = document.getElementById('err-sug');
+  const company  = document.getElementById('fc').value.trim();
+  const keyword  = document.getElementById('fk').value.trim();
+  const wc       = document.getElementById('fw').value;
+  const website  = document.getElementById('fweb').value.trim();
+  const location = document.getElementById('floc').value.trim();
+  const btn      = document.getElementById('btn-sug');
+  const err      = document.getElementById('err-sug');
   if (!company || !keyword) { toast('Fill in company name and keyword first'); return; }
   btn.disabled = true;
   btn.innerHTML = '<span class="spin"></span> Generating...';
   err.style.display = 'none';
   try {
-    const r = await fetch(URL_SUG, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc}) });
+    const r = await fetch(URL_SUG, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,website,location}) });
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
     const topics = Array.isArray(d.topics) ? d.topics : [];
@@ -410,6 +437,7 @@ async function suggestTopics() {
     renderTopics(topics);
     setStep(1,'done'); setStep(2,'active');
     document.getElementById('topics-sec').style.display = 'block';
+    document.getElementById('write-card').style.display = 'block';
     document.getElementById('topics-sec').scrollIntoView({behavior:'smooth',block:'nearest'});
   } catch(e) {
     err.style.display = 'block';
@@ -437,26 +465,30 @@ function pickTopic(i, text) {
 
 // ── WRITE ARTICLE ─────────────────────────────────────────────────────────────
 async function writeArticle() {
-  if (!picked) return;
-  const company = document.getElementById('fc').value.trim();
-  const keyword = document.getElementById('fk').value.trim();
-  const wc      = document.getElementById('fw').value;
-  const btn     = document.getElementById('btn-write');
-  const err     = document.getElementById('err-write');
+  const manualTopic = document.getElementById('fmanual').value.trim();
+  if (!picked && !manualTopic) { toast('Pick a topic or type your own'); return; }
+  const finalTopic = manualTopic || picked;
+  const company  = document.getElementById('fc').value.trim();
+  const keyword  = document.getElementById('fk').value.trim();
+  const wc       = document.getElementById('fw').value;
+  const website  = document.getElementById('fweb').value.trim();
+  const location = document.getElementById('floc').value.trim();
+  const btn      = document.getElementById('btn-write');
+  const err      = document.getElementById('err-write');
   btn.disabled = true;
   btn.innerHTML = '<span class="spin spin-pink"></span> Writing article — this may take a minute...';
   err.style.display = 'none';
   try {
-    const r = await fetch(URL_WRITE, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,finalTopic:picked}) });
+    const r = await fetch(URL_WRITE, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,finalTopic,website,location}) });
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
     if (!d.docLink) throw new Error('no link');
     setStep(3,'done'); setStep(4,'done');
     document.getElementById('done-card').style.display = 'block';
-    document.getElementById('done-sub').textContent = `"${picked}" written and saved to Google Drive.`;
+    document.getElementById('done-sub').textContent = `"${finalTopic}" written and saved to Google Drive.`;
     document.getElementById('done-link').href = d.docLink;
     btn.style.display = 'none';
-    saveArt({topic:picked,keyword,company,wordCount:wc,status:'done',docLink:d.docLink,date:new Date().toISOString(),note:'',submitted:false});
+    saveArt({topic:finalTopic,keyword,company,wordCount:wc,status:'done',docLink:d.docLink,date:new Date().toISOString(),note:'',submitted:false});
     toast('Article saved!');
     document.getElementById('done-card').scrollIntoView({behavior:'smooth',block:'nearest'});
   } catch(e) {
@@ -537,9 +569,10 @@ function confirmDelete() {
 
 // ── RESET FORM ────────────────────────────────────────────────────────────────
 function resetForm() {
-  ['fc','fk'].forEach(id=>document.getElementById(id).value='');
+  ['fc','fk','fweb','floc','fmanual'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fw').value='';
   document.getElementById('topics-sec').style.display='none';
+  document.getElementById('write-card').style.display='none';
   document.getElementById('done-card').style.display='none';
   document.getElementById('err-sug').style.display='none';
   document.getElementById('err-write').style.display='none';
