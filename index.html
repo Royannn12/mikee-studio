@@ -258,11 +258,10 @@ nav{padding:18px 12px;flex:1}
               <div class="fg"><label>Company name</label><input type="text" id="fc" placeholder="e.g. Acme Corp"></div>
               <div class="fg"><label>Primary keyword</label><input type="text" id="fk" placeholder="e.g. cloud security"></div>
               <div class="fg"><label>Company website</label><input type="text" id="fweb" placeholder="e.g. https://acmecorp.com"></div>
-              <div class="fg"><label>Company location</label><input type="text" id="floc" placeholder="e.g. Naples, FL"></div>
               <div class="fg"><label>Target word count</label><input type="number" id="fw" placeholder="e.g. 600" min="100" max="5000"></div>
             </div>
             <button class="btn-gen" id="btn-sug" onclick="suggestTopics()">✦ Suggest topics with AI</button>
-            <div class="err-box" id="err-sug">Could not reach n8n. Make sure it is running and ngrok is active.</div>
+            <div class="err-box" id="err-sug">Something went wrong. Please contact Ryan for support.</div>
           </div>
 
           <div class="card" id="manual-topic-card" style="margin-bottom:0">
@@ -277,7 +276,7 @@ nav{padding:18px 12px;flex:1}
               <div style="flex:1;height:1px;background:var(--border)"></div>
             </div>
             <button class="btn-gen" id="btn-sug" onclick="suggestTopics()">✦ Suggest topics with AI</button>
-            <div class="err-box" id="err-sug">Could not reach n8n. Make sure it is running and ngrok is active.</div>
+            <div class="err-box" id="err-sug">Something went wrong. Please contact Ryan for support.</div>
           </div>
 
           <div id="topics-sec" style="display:none">
@@ -388,8 +387,16 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('lu').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('lp').focus(); });
   document.getElementById('fmanual').addEventListener('input', function() {
     const wc = document.getElementById('write-card');
-    if (this.value.trim()) { wc.style.display='block'; setStep(2,'done'); setStep(3,'active'); }
-    else if (!picked) { wc.style.display='none'; }
+    if (this.value.trim()) {
+      wc.style.display = 'block';
+      document.getElementById('btn-write').style.display = 'flex';
+      // Deselect any AI topic when typing manual
+      document.querySelectorAll('.topic-card').forEach(el => el.classList.remove('selected'));
+      picked = null;
+      setStep(2,'done'); setStep(3,'active');
+    } else if (!picked) {
+      wc.style.display = 'none';
+    }
   });
 });
 
@@ -421,7 +428,6 @@ async function suggestTopics() {
   const keyword  = document.getElementById('fk').value.trim();
   const wc       = document.getElementById('fw').value;
   const website  = document.getElementById('fweb').value.trim();
-  const location = document.getElementById('floc').value.trim();
   const btn      = document.getElementById('btn-sug');
   const err      = document.getElementById('err-sug');
   if (!company || !keyword) { toast('Fill in company name and keyword first'); return; }
@@ -429,7 +435,7 @@ async function suggestTopics() {
   btn.innerHTML = '<span class="spin"></span> Generating...';
   err.style.display = 'none';
   try {
-    const r = await fetch(URL_SUG, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,website,location}) });
+    const r = await fetch(URL_SUG, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,website,location:''}) });
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
     const topics = Array.isArray(d.topics) ? d.topics : [];
@@ -459,27 +465,29 @@ function pickTopic(i, text) {
   picked = text;
   document.querySelectorAll('.topic-card').forEach(el => el.classList.remove('selected'));
   document.getElementById('tc'+i).classList.add('selected');
+  document.getElementById('write-card').style.display = 'block';
   document.getElementById('btn-write').style.display = 'flex';
+  // Clear manual topic when AI topic is selected
+  document.getElementById('fmanual').value = '';
   setStep(2,'done'); setStep(3,'active');
 }
 
 // ── WRITE ARTICLE ─────────────────────────────────────────────────────────────
 async function writeArticle() {
   const manualTopic = document.getElementById('fmanual').value.trim();
-  if (!picked && !manualTopic) { toast('Pick a topic or type your own'); return; }
   const finalTopic = manualTopic || picked;
+  if (!finalTopic) { toast('Pick a topic or type your own above'); return; }
   const company  = document.getElementById('fc').value.trim();
   const keyword  = document.getElementById('fk').value.trim();
   const wc       = document.getElementById('fw').value;
   const website  = document.getElementById('fweb').value.trim();
-  const location = document.getElementById('floc').value.trim();
   const btn      = document.getElementById('btn-write');
   const err      = document.getElementById('err-write');
   btn.disabled = true;
   btn.innerHTML = '<span class="spin spin-pink"></span> Writing article — this may take a minute...';
   err.style.display = 'none';
   try {
-    const r = await fetch(URL_WRITE, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,finalTopic,website,location}) });
+    const r = await fetch(URL_WRITE, { method:'POST', headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}, body: JSON.stringify({company,keyword,wordCount:wc,finalTopic,website,location:''}) });
     if (!r.ok) throw new Error(r.status);
     const d = await r.json();
     if (!d.docLink) throw new Error('no link');
@@ -569,7 +577,7 @@ function confirmDelete() {
 
 // ── RESET FORM ────────────────────────────────────────────────────────────────
 function resetForm() {
-  ['fc','fk','fweb','floc','fmanual'].forEach(id=>document.getElementById(id).value='');
+  ['fc','fk','fweb','fmanual'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fw').value='';
   document.getElementById('topics-sec').style.display='none';
   document.getElementById('write-card').style.display='none';
